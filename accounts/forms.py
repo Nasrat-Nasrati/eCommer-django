@@ -24,7 +24,7 @@ class RagistrationForm(forms.ModelForm):
         for field in self.fields:
             self.fields[field].widget.attrs['class']='form-control'
 
-    def clean():
+    def clean(self):
         cleaned_data = super(RagistrationForm,self).clean()
         password = cleaned_data.get('password')
         confirm_password = cleaned_data.get('confirm_password')
