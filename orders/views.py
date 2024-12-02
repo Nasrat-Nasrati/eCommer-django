@@ -1,10 +1,13 @@
 from django.shortcuts import render,redirect
-from django.http import HttpResponse
+from django.http import HttpResponse,JsonResponse
 from carts.models import CartItem
 import datetime
 from .forms import OrderForm
-from .models import Order,Payment
+from .models import Order,Payment,OrderProduct
 import json
+from store.models import Product
+from django.core.mail import EmailMessage
+from django.template.loader import render_to_string
 
 
 #the payment def
@@ -27,8 +30,64 @@ def payments(request):
     order.is_ordered = True
     order.save()
 
+    # move the cart item to the order product table 
+    cart_items = CartItem.objects.filter(user=request.user)
 
-    return render(request,'orders/payments.html')
+    for item in cart_items:
+        orderproduct = OrderProduct()
+        orderproduct.order_id = order.id 
+        orderproduct.payment = payment
+        orderproduct.user_id = request.user.id 
+        orderproduct.product_id = item.product_id
+        orderproduct.quantity = item.quantity
+        orderproduct.product_price = item.product.price
+        orderproduct.ordered = True
+        orderproduct.save()
+
+        #save the variation to the order product table
+       
+        cart_item = CartItem.objects.get(id=item.id)
+        product_variation = cart_item.variations.all()
+        orderproduct = OrderProduct.objects.get(id=orderproduct.id)
+        orderproduct.variation.set(product_variation)
+        orderproduct.save()
+
+# reduce the quantity of solld products 
+
+        product = Product.objects.get(id=item.product_id)
+        product.stock -= item.quantity
+        product.save()
+
+
+#clear the card 
+    CartItem.objects.filter(user= request.user).delete()
+
+#send email to the customer 
+    try:
+        mail_subject = 'Thank you for your Order!'
+        message = render_to_string('orders/order_recieved_email.html', {
+            'user': request.user,
+            'order': order,
+        })
+        to_email = request.user.email
+        send_email = EmailMessage(mail_subject, message, to=[to_email])
+        send_email.send()
+    except Exception as e:
+        print(f"Error sending email: {e}")
+
+
+#send order number and transaction id back to sendDAta via jason 
+    data ={
+        'order_number': order.order_number,
+        'transID':payment.payment_id
+
+    }
+
+    return JsonResponse(data)
+
+
+
+    
 
 
 def place_order(request, total =0,quantity =0,):
@@ -105,6 +164,30 @@ def place_order(request, total =0,quantity =0,):
 
     
 
+# the view of order complete section 
+def order_complete(request):
+    order_number = request.GET.get('order_number')
+    transID = request.GET.get('payment_id')
+    try:
+        order = Order.objects.get(order_number = order_number,is_ordered = True)
+        order_products = OrderProduct.objects.filter(order_id = order.id)
+        #found the sub total 
+        subtotal= 0
+        for i in order_products:
+            subtotal += i.product_price * i.quantity
+
+        payment = Payment.objects.get(payment_id=transID)
+        context = {
+            'order':order,
+            'order_products': order_products,
+            'order_number': order.order_number,
+            'transID': payment.payment_id,
+            'payment':payment,
+            'subtotal':subtotal,
+        }
+        return render(request, 'orders/order_complete.html',context)
+    except(Payment.DoesNotExist,Order.DoesNotExist):
+        return redirect('home')
 
 
 
