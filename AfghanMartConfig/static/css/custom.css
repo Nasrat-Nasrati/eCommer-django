@@ -1,0 +1,46 @@
+.rate {
+    display: flex; /* Use flexbox to arrange stars horizontally */
+    flex-direction: row; /* Arrange stars from left to right */
+    justify-content: flex-start; /* Align stars to the left */
+    }
+    
+.rate > input {
+    display: none; /* Hide the radio buttons */
+    }
+    
+.rate > label {
+    position: relative;
+    cursor: pointer;
+    font-size: 1.5rem;
+    font-family: "Font Awesome 5 Free"; /* or "Font Awesome 6 Free" */
+    font-weight: 900; /* Required for solid icons */
+    content: "\f005"; /* Default star icon */
+    color: black; /* Default color */
+    }
+    
+.rate > label::before {
+    content: "\f005"; /* Star icon */
+    }
+    
+.rate .half::before {
+    content: "\f089"; /* Unicode for half-star */
+    position: absolute;
+    padding-right: 0;
+    
+    }
+    
+    /* Hover effect: Change star color */
+.rate > label:hover,
+.rate > label:hover ~ label {
+    color: #ffb503; /* Highlight hovered stars */
+    }
+    
+    /* Checked effect: Change color of selected stars */
+.rate > input:checked ~ label {
+    color: #ffb503;
+    }
+    
+
+.raging_start i{
+    color:#ffb503 !important;
+        }
