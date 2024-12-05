@@ -9,6 +9,7 @@ from .forms import ReviewForm
 from django.contrib import messages
 from django.shortcuts import redirect
 from orders.models import OrderProduct
+from .models import ProductGallery
 
 
 
@@ -64,6 +65,10 @@ def product_detail(request,category_slug,product_slug):
 
         # in here I want to show all product review for particular user 
     reviews = ReviewRating.objects.filter(product_id=single_product.id,status = True)
+    
+    #get the product gallery 
+    product_gallery = ProductGallery.objects.filter(product_id = single_product.id)
+
 
 
     context = {
@@ -71,6 +76,7 @@ def product_detail(request,category_slug,product_slug):
         'in_cart':in_cart,
         'orderproduct':orderproduct,
         'reviews':reviews,
+        'product_gallery':product_gallery,
     }
     return render(request,'store/product_detail.html',context)
 

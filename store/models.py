@@ -86,3 +86,16 @@ class ReviewRating(models.Model):
      def __str__(self):
           return self.subject
      
+
+class ProductGallery(models.Model):
+     product = models.ForeignKey(Product,on_delete=models.CASCADE, default=None)
+     image = models.ImageField(upload_to='store/products', max_length=255)
+      
+     def __str__(self):
+          return self.product.product_name
+     
+     class Meta:  # Corrected capitalization
+            verbose_name = 'product gallery'
+            verbose_name_plural = 'product gallery'  # Made plural match convention
+
+
